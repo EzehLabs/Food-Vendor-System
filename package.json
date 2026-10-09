@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "node --check src/server.js",
-        "dev": "node --watch src/server.js",
+        "build": "vite build",
+        "dev": "vite",
         "start": "node src/server.js",
         "serve": "node --watch src/server.js"
     },
