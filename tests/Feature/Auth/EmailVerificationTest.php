@@ -45,7 +45,7 @@ class EmailVerificationTest extends TestCase
             ->from('/verify-email')
             ->post('/email/verification-notification')
             ->assertRedirect('/verify-email')
-            ->assertSessionHas('status', 'verification-link-sent');
+            ->assertSessionHas('status', 'verification-link-sending');
 
         Http::assertSent(function (Request $request) use ($user): bool {
             return $request->url() === 'https://api.brevo.com/v3/smtp/email'
@@ -59,16 +59,39 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $this->post('/register/customer', [
-            'name' => 'Test Customer',
-            'email' => 'customer@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertRedirect(route('verification.notice'));
+        $this->followingRedirects()
+            ->post('/register/customer', [
+                'name' => 'Test Customer',
+                'email' => 'customer@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertOk()
+            ->assertSee('Your account was registered successfully.');
 
         $user = User::where('email', 'customer@example.com')->firstOrFail();
 
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_registration_response_is_shown_when_email_delivery_fails(): void
+    {
+        config([
+            'mail.default' => 'brevo',
+            'services.brevo.key' => null,
+        ]);
+
+        $this->followingRedirects()
+            ->post('/register/customer', [
+                'name' => 'Test Customer',
+                'email' => 'customer@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertOk()
+            ->assertSee('Your account was registered successfully.');
+
+        $this->assertAuthenticated();
     }
 
     public function test_login_resends_verification_email_for_unverified_user(): void
@@ -81,7 +104,7 @@ class EmailVerificationTest extends TestCase
             'password' => 'password',
         ])
             ->assertRedirect(route('verification.notice'))
-            ->assertSessionHas('status', 'verification-link-sent');
+            ->assertSessionHas('status', 'verification-link-sending');
 
         Notification::assertSentTo($user, VerifyEmail::class);
     }

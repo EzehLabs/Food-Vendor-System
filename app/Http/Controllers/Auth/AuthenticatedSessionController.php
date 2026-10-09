@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\EmailVerificationService;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,17 +23,17 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, EmailVerificationService $emailVerification): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
         if (! $request->user()->hasVerifiedEmail()) {
-            $request->user()->sendEmailVerificationNotification();
+            $emailVerification->send($request->user());
 
             return redirect()->route('verification.notice')
-                ->with('status', 'verification-link-sent');
+                ->with('status', 'verification-link-sending');
         }
 
         if(auth()->user()->role == 'vendor'){

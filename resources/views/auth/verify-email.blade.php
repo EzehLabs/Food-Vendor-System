@@ -112,7 +112,7 @@
                         </h3>
 
                         <p class="small-text mt-3">
-                            We've sent a verification link to:
+                            Verification link sent to:
                         </p>
 
                         <h6 class="text-success mb-4">
@@ -126,16 +126,16 @@
 
                     </div>
 
-                    @if(session('status') == 'verification-link-sent')
-
-                        <div class="alert alert-success">
-
+                    @if (session('status') === 'registration-complete')
+                        <div class="alert alert-success" role="status">
                             <i class="fas fa-check-circle me-2"></i>
-
-                            A new verification email has been sent successfully.
-
+                            Your account was registered successfully. We're sending a verification link now; please check your inbox shortly.
                         </div>
-
+                    @elseif (session('status') === 'verification-link-sending')
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            We're sending the verification email now. Please check your inbox shortly.
+                        </div>
                     @endif
                     
                     <div class="text-center mt-4">

@@ -40,11 +40,19 @@
                             Create Account
                         </h3>
 
+                        @if ($errors->any())
+                            <div class="alert alert-danger" role="alert">
+                                @foreach ($errors->all() as $error)
+                                    <div>{{ $error }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+
                         <ul class="nav nav-pills nav-fill mb-4" id="registerTabs">
 
                             <li class="nav-item">
                                 <button
-                                    class="nav-link active"
+                                    class="nav-link {{ old('company_name') ? '' : 'active' }}"
                                     id="customer-tab"
                                     type="button">
 
@@ -55,7 +63,7 @@
 
                             <li class="nav-item">
                                 <button
-                                    class="nav-link"
+                                    class="nav-link {{ old('company_name') ? 'active' : '' }}"
                                     id="vendor-tab"
                                     type="button">
 
@@ -66,13 +74,13 @@
 
                         </ul>
 
-                        <div id="customerForm">
+                        <div id="customerForm" class="{{ old('company_name') ? 'd-none' : '' }}">
 
                             @include('auth.register-customer')
 
                         </div>
 
-                        <div id="vendorForm" class="d-none">
+                        <div id="vendorForm" class="{{ old('company_name') ? '' : 'd-none' }}">
 
                             @include('auth.register-vendor')
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\EmailVerificationService;
 
 use App\Models\User;
 use App\Models\Vendor;
@@ -58,7 +59,7 @@ class RegisteredUserController extends Controller
     //     // return redirect(route('dashboard', absolute: false));
     // }
 
-    public function registerVendor(Request $request) {
+    public function registerVendor(Request $request, EmailVerificationService $emailVerification) {
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
@@ -79,14 +80,14 @@ class RegisteredUserController extends Controller
             'company_name' => $request->company_name,
         ]);
 
-        $user->sendEmailVerificationNotification();
-
         Auth::login($user);
 
-        return redirect()->route('verification.notice');
+        $emailVerification->send($user);
+
+        return redirect()->route('verification.notice')->with('status', 'registration-complete');
     }
 
-    public function registerCustomer(Request $request) {
+    public function registerCustomer(Request $request, EmailVerificationService $emailVerification) {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -100,10 +101,10 @@ class RegisteredUserController extends Controller
             'role' => 'customer',
         ]);
 
-        $user->sendEmailVerificationNotification();
-
         Auth::login($user);
 
-        return redirect()->route('verification.notice');
+        $emailVerification->send($user);
+
+        return redirect()->route('verification.notice')->with('status', 'registration-complete');
     }
 }

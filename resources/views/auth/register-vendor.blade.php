@@ -1,15 +1,5 @@
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-
-        @foreach($errors->all() as $error)
-            <div>{{ $error }}</div>
-        @endforeach
-
-    </div>
-@endif
-
-<form method="POST" action="/register/vendor" id="loginForm">
+<form method="POST" action="/register/vendor" id="vendorRegisterForm">
         @csrf
 
     <!-- Name -->
@@ -121,7 +111,7 @@
     <button
         type="submit"
         class="btn btn-success w-100"
-        id="loginBtn">
+        id="vendorRegisterBtn">
 
         Register
 
@@ -169,15 +159,14 @@
         }
     }
 
-    document.getElementById('loginForm').onsubmit=function(){
+    document.getElementById('vendorRegisterForm').onsubmit=function(){
 
-        let btn=document.getElementById('loginBtn');
+        let btn=document.getElementById('vendorRegisterBtn');
 
         btn.disabled=true;
 
-        btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Signing In...';
+        btn.innerHTML='<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Creating Account...';
 
     }
 
 </script>
-
