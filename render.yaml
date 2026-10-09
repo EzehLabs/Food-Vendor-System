@@ -13,9 +13,9 @@ services:
       - key: APP_KEY
         generateValue: true
       - key: APP_URL
-        value: https://food-vending-system.onrender.com
+        value: https://food-vending-system-yfg9.onrender.com
       - key: LOG_CHANNEL
-        value: stack
+        value: stderr
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
