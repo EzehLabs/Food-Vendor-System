@@ -4,10 +4,12 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
@@ -51,6 +53,37 @@ class EmailVerificationTest extends TestCase
                 && $request['subject'] !== ''
                 && str_contains($request['htmlContent'], "/email/verify/{$user->id}/");
         });
+    }
+
+    public function test_registration_sends_a_verification_email(): void
+    {
+        Notification::fake();
+
+        $this->post('/register/customer', [
+            'name' => 'Test Customer',
+            'email' => 'customer@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'customer@example.com')->firstOrFail();
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_login_resends_verification_email_for_unverified_user(): void
+    {
+        Notification::fake();
+        $user = User::factory()->unverified()->create();
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])
+            ->assertRedirect(route('verification.notice'))
+            ->assertSessionHas('status', 'verification-link-sent');
+
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
     public function test_email_can_be_verified(): void

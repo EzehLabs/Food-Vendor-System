@@ -30,6 +30,8 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 Create the API key in Brevo under **Settings → SMTP & API → API Keys**. Do not use an SMTP key here. This app sends through Brevo's HTTPS API so it works on Render's Free web services, which block outbound SMTP ports.
 
+Email verification links are sent after registration and again when an unverified user logs in. The local `.env.example` defaults to Laravel's `log` mailer, which records messages instead of delivering them; to receive mail locally, set `MAIL_MAILER=brevo`, `BREVO_API_KEY`, and a Brevo-verified `MAIL_FROM_ADDRESS` in `.env`.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
