@@ -30,7 +30,7 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 Create the API key in Brevo under **Settings → SMTP & API → API Keys**. Do not use an SMTP key here. This app sends through Brevo's HTTPS API so it works on Render's Free web services, which block outbound SMTP ports.
 
-Email verification links are sent after registration and again when an unverified user logs in. The local `.env.example` defaults to Laravel's `log` mailer, which records messages instead of delivering them; to receive mail locally, set `MAIL_MAILER=brevo`, `BREVO_API_KEY`, and a Brevo-verified `MAIL_FROM_ADDRESS` in `.env`.
+Registration sends an email verification link. Login is passwordless: users enter their email address and receive a single-use sign-in link that expires after 15 minutes. Opening the link signs them in and verifies their email if it has not already been verified. Logging out invalidates the current session, so the next login requires a new link. The local `.env.example` defaults to Laravel's `log` mailer, which records messages instead of delivering them; to receive mail locally, set `MAIL_MAILER=brevo`, `BREVO_API_KEY`, and a Brevo-verified `MAIL_FROM_ADDRESS` in `.env`.
 
 ## Learning Laravel
 

@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -17,38 +18,40 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_login_requests_a_sign_in_link_by_email(): void
     {
-        $user = User::factory()->create();
+        Notification::fake();
+        $user = User::factory()->create(['email' => 'user@example.com']);
 
         $response = $this->post('/login', [
             'email' => $user->email,
-            'password' => 'password',
-        ]);
-
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
-    }
-
-    public function test_users_can_not_authenticate_with_invalid_password(): void
-    {
-        $user = User::factory()->create();
-
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
         ]);
 
         $this->assertGuest();
+        $response->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'login-link-sent');
+    }
+
+    public function test_unknown_email_gets_the_same_login_response_without_sending_mail(): void
+    {
+        Notification::fake();
+        $response = $this->post('/login', ['email' => 'unknown@example.com']);
+
+        $this->assertGuest();
+        $response->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'login-link-sent');
+        Notification::assertNothingSent();
     }
 
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create();
 
+        $sessionId = $this->app['session']->getId();
         $response = $this->actingAs($user)->post('/logout');
 
         $this->assertGuest();
         $response->assertRedirect('/');
+        $this->assertNotSame($sessionId, $this->app['session']->getId());
     }
 }

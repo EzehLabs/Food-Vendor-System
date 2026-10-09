@@ -94,16 +94,15 @@ class EmailVerificationTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_login_resends_verification_email_for_unverified_user(): void
+    public function test_unverified_user_can_resend_their_verification_email(): void
     {
         Notification::fake();
         $user = User::factory()->unverified()->create();
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ])
-            ->assertRedirect(route('verification.notice'))
+        $this->actingAs($user)
+            ->from('/email/verify')
+            ->post('/email/verification-notification')
+            ->assertRedirect('/email/verify')
             ->assertSessionHas('status', 'verification-link-sending');
 
         Notification::assertSentTo($user, VerifyEmail::class);

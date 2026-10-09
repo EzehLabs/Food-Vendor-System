@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\EmailVerificationService;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
+use App\Services\SignInLinkService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,30 +24,41 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request, EmailVerificationService $emailVerification): RedirectResponse
+    public function store(LoginRequest $request, SignInLinkService $signInLinks): RedirectResponse
     {
-        $request->authenticate();
+        $signInLinks->sendTo($request->validated('email'));
 
+        return redirect()->route('login')->with('status', 'login-link-sent');
+    }
+
+    /**
+     * Authenticate a user with a valid, single-use sign-in link.
+     */
+    public function consume(
+        Request $request,
+        int $user,
+        string $token,
+        SignInLinkService $signInLinks
+    ): RedirectResponse {
+        $account = User::find($user);
+
+        if (! $account || ! $signInLinks->consume($account, $token)) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'This sign-in link is invalid or expired. Please request a new one.']);
+        }
+
+        if (! $account->hasVerifiedEmail()) {
+            $account->markEmailAsVerified();
+        }
+
+        Auth::login($account);
         $request->session()->regenerate();
 
-        if (! $request->user()->hasVerifiedEmail()) {
-            $emailVerification->send($request->user());
-
-            return redirect()->route('verification.notice')
-                ->with('status', 'verification-link-sending');
-        }
-
-        if(auth()->user()->role == 'vendor'){
-            return redirect('/vendor/dashboard');
-            // return redirect()->intended(route('/vendor/dashboard', absolute: false));
-        }elseif(auth()->user()->role == 'admin'){ 
-            return redirect('/admin/dashboard');
-        }else {
-            return redirect('/customer/home');
-            // return redirect()->intended(route('/customer/home', absolute: false));
-        }
-
-        // return redirect()->intended(route('dashboard', absolute: false));
+        return match ($account->role) {
+            'vendor' => redirect('/vendor/dashboard'),
+            'admin' => redirect('/admin/dashboard'),
+            default => redirect('/customer/home'),
+        };
     }
 
     /**

@@ -34,6 +34,12 @@
                             Welcome Back
                         </h3>
 
+                        @if (session('status') === 'login-link-sent')
+                            <div class="alert alert-info" role="status">
+                                If an account exists for that email, a sign-in link is on its way. The link expires in 15 minutes.
+                            </div>
+                        @endif
+
                         @if ($errors->any())
                             <div class="alert alert-danger">
 
@@ -70,73 +76,19 @@
 
                             </div>
 
-                            <div class="mb-3">
-
-                                <label>Password</label>
-
-                                <div class="input-group">
-
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-
-                                    <input
-                                        type="password"
-                                        id="password"
-                                        class="form-control"
-                                        name="password"
-                                        required>
-
-                                    <button
-                                        class="btn btn-outline-secondary"
-                                        type="button"
-                                        id="togglePassword">
-
-                                        <i class="fas fa-eye"></i>
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                            <div class="d-flex justify-content-between mb-3">
-
-                                <div class="form-check">
-
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        name="remember">
-
-                                    <label class="form-check-label">
-
-                                        Remember Me
-
-                                    </label>
-
-                                </div>
-
-                                @if (Route::has('password.request'))
-
-                                    <a href="{{ route('password.request') }}">
-                                        Forgot Password?
-                                    </a>
-
-                                @endif
-
-                            </div>
-
                             <button
                                 type="submit"
                                 class="btn btn-success w-100"
                                 id="loginBtn">
 
-                                Login
+                                Email Me a Sign-in Link
 
                             </button>
 
                         </form>
+                        <p class="text-muted text-center mt-3 mb-0">
+                            We'll email you a secure link that expires in 15 minutes.
+                        </p>
                         <br>
                         <hr>
 
@@ -164,33 +116,13 @@
 
 <script>
 
-document.getElementById('togglePassword').onclick = function(){
-
-    let password = document.getElementById('password');
-
-    if(password.type === 'password'){
-
-        password.type='text';
-
-        this.innerHTML='<i class="fas fa-eye-slash"></i>';
-
-    }else{
-
-        password.type='password';
-
-        this.innerHTML='<i class="fas fa-eye"></i>';
-
-    }
-
-};
-
 document.getElementById('loginForm').onsubmit=function(){
 
     let btn=document.getElementById('loginBtn');
 
     btn.disabled=true;
 
-    btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Signing In...';
+    btn.innerHTML='<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Sending Link...';
 
 }
 
