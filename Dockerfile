@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
+    supervisor \
     && docker-php-ext-install pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,6 +31,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts
 
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
+COPY docker/supervisord.conf /etc/supervisor/conf.d/food-vending.conf
 
 RUN composer dump-autoload --no-dev --optimize \
     && php artisan package:discover --ansi \
@@ -37,4 +39,4 @@ RUN composer dump-autoload --no-dev --optimize \
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "if [ -n \"$APP_KEY\" ] && [ \"${APP_KEY#base64:}\" = \"$APP_KEY\" ]; then export APP_KEY=\"base64:$APP_KEY\"; fi; php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+CMD ["sh", "-c", "if [ -n \"$APP_KEY\" ] && [ \"${APP_KEY#base64:}\" = \"$APP_KEY\" ]; then export APP_KEY=\"base64:$APP_KEY\"; fi; export PORT=${PORT:-10000}; php artisan migrate --force && exec supervisord -n -c /etc/supervisor/conf.d/food-vending.conf"]

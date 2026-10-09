@@ -3,18 +3,12 @@
 namespace App\Services;
 
 use App\Models\User;
-use Throwable;
+use App\Notifications\QueuedVerifyEmailNotification;
 
 class EmailVerificationService
 {
     public function send(User $user): void
     {
-        defer(function () use ($user): void {
-            try {
-                $user->sendEmailVerificationNotification();
-            } catch (Throwable $exception) {
-                report($exception);
-            }
-        });
+        $user->notify(new QueuedVerifyEmailNotification);
     }
 }

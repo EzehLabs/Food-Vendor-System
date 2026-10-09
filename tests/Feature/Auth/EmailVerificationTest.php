@@ -3,13 +3,15 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Notifications\QueuedVerifyEmailNotification;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
@@ -41,11 +43,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)
-            ->from('/verify-email')
-            ->post('/email/verification-notification')
-            ->assertRedirect('/verify-email')
-            ->assertSessionHas('status', 'verification-link-sending');
+        Notification::sendNow($user, new QueuedVerifyEmailNotification);
 
         Http::assertSent(function (Request $request) use ($user): bool {
             return $request->url() === 'https://api.brevo.com/v3/smtp/email'
@@ -57,7 +55,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_registration_sends_a_verification_email(): void
     {
-        Notification::fake();
+        Queue::fake();
 
         $this->followingRedirects()
             ->post('/register/customer', [
@@ -71,11 +69,13 @@ class EmailVerificationTest extends TestCase
 
         $user = User::where('email', 'customer@example.com')->firstOrFail();
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Queue::assertPushed(SendQueuedNotifications::class);
     }
 
     public function test_registration_response_is_shown_when_email_delivery_fails(): void
     {
+        Queue::fake();
+
         config([
             'mail.default' => 'brevo',
             'services.brevo.key' => null,
@@ -92,6 +92,7 @@ class EmailVerificationTest extends TestCase
             ->assertSee('Your account was registered successfully.');
 
         $this->assertAuthenticated();
+        Queue::assertPushed(SendQueuedNotifications::class);
     }
 
     public function test_unverified_user_can_resend_their_verification_email(): void
@@ -105,7 +106,7 @@ class EmailVerificationTest extends TestCase
             ->assertRedirect('/email/verify')
             ->assertSessionHas('status', 'verification-link-sending');
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, QueuedVerifyEmailNotification::class);
     }
 
     public function test_email_can_be_verified(): void
