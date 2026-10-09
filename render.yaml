@@ -16,6 +16,20 @@ services:
         value: https://food-vending-system-yfg9.onrender.com
       - key: LOG_CHANNEL
         value: stderr
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Food Vending System
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
