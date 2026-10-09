@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: food-vending-system
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://food-vending-system.onrender.com
+      - key: LOG_CHANNEL
+        value: stack
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: food-vending-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: food-vending-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: food-vending-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: food-vending-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: food-vending-db
+          property: password
+
+  - type: pserv
+    name: food-vending-db
+    plan: free
+    databaseName: food_vending
+    user: food_vending

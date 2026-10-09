@@ -12,24 +12,22 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath \
+    && curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
-RUN composer require resend/resend-laravel
+RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader \
+    && php artisan config:clear \
+    && php artisan storage:link || true
 
-
-RUN php artisan vendor:publish --provider="Resend\Laravel\ResendServiceProvider"
-RUN php artisan storage:link || true
-
-RUN chmod -R 775 storage bootstrap/cache
+RUN npm install --include=dev \
+    && npm run build \
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
-
-RUN npm install
-RUN npm run build
+CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"
