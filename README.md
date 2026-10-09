@@ -26,9 +26,9 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 1. Push this project to a GitHub repository, including `render.yaml` and `Dockerfile`. Do not commit `.env`, `vendor`, or `node_modules`.
 2. In Render, create a new Blueprint and connect the repository. Render will create the web service and PostgreSQL database defined in `render.yaml`.
 3. After the service is created, confirm `APP_URL` matches the service's Render URL. The container runs Laravel migrations when it starts.
-4. In the web service's Environment settings, set `MAIL_USERNAME` to your Brevo SMTP login, `MAIL_PASSWORD` to your Brevo SMTP key (not an API key), and `MAIL_FROM_ADDRESS` to a sender address verified in Brevo. Keep `MAIL_MAILER=smtp`, `MAIL_HOST=smtp-relay.brevo.com`, and `MAIL_PORT=587`, then redeploy.
+4. In the web service's Environment settings, set `BREVO_API_KEY` to a Brevo API key and `MAIL_FROM_ADDRESS` to a sender address verified in Brevo. Keep `MAIL_MAILER=brevo`, then redeploy.
 
-Brevo SMTP credentials are available in the Brevo account under SMTP settings. Verify the sender address or domain with Brevo before sending verification emails.
+Create the API key in Brevo under **Settings → SMTP & API → API Keys**. Do not use an SMTP key here. This app sends through Brevo's HTTPS API so it works on Render's Free web services, which block outbound SMTP ports.
 
 ## Learning Laravel
 

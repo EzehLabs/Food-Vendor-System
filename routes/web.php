@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\CustomerController;
@@ -41,14 +42,9 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect('/customer/home');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
-// Resend Verification Email
-Route::post('/email/verification-notification', function (Request $request) {
-
-    $request->user()->sendEmailVerificationNotification();
-
-    return back()->with('status', 'Verification link sent!');
-
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');
 
 // Route::get('/', function () {
 //     return view('welcome');
