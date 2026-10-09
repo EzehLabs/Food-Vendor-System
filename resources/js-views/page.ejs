@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %> | <%= appName %></title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container">
+        <a class="navbar-brand" href="/"><%= appName %></a>
+        <div class="navbar-nav ms-auto align-items-center">
+            <a class="nav-link" href="/">Home</a>
+            <% if (user) { %>
+                <% if (user.role === 'customer') { %>
+                    <a class="nav-link" href="/customer/foods">Food</a>
+                    <a class="nav-link" href="/cart">Cart</a>
+                    <a class="nav-link" href="/customer/orders">Orders</a>
+                <% } else if (user.role === 'vendor') { %>
+                    <a class="nav-link" href="/vendor/dashboard">Dashboard</a>
+                    <a class="nav-link" href="/vendor/foods">Foods</a>
+                    <a class="nav-link" href="/vendor/orders">Orders</a>
+                <% } else { %>
+                    <a class="nav-link" href="/admin/dashboard">Admin</a>
+                <% } %>
+                <a class="nav-link" href="/profile">Profile</a>
+                <form method="post" action="/logout" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-link nav-link" type="submit">Log out</button>
+                </form>
+            <% } else { %>
+                <a class="nav-link" href="/login">Sign in</a>
+                <a class="nav-link" href="/register">Register</a>
+            <% } %>
+        </div>
+    </div>
+</nav>
+<main class="container py-5">
+    <h1 class="h2 mb-4"><%= title %></h1>
+    <% if (status) { %><div class="alert alert-success" role="status"><%= status %></div><% } %>
+    <% if (error) { %><div class="alert alert-danger" role="alert"><%= error %></div><% } %>
+
+    <% if (kind === 'login') { %>
+        <div class="card mx-auto" style="max-width: 34rem"><div class="card-body">
+            <p>Enter your email address and we will send you a secure, single-use sign-in link.</p>
+            <form method="post" action="/login">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <label class="form-label" for="email">Email address</label>
+                <input class="form-control mb-3" type="email" id="email" name="email" value="<%= typeof email === 'string' ? email : '' %>" required autofocus>
+                <button class="btn btn-success w-100" type="submit">Email me a sign-in link</button>
+            </form>
+            <p class="text-muted mt-3 mb-0">The sign-in link expires after 15 minutes and can only be used once.</p>
+            <a href="/forgot-password">Forgot password?</a>
+        </div></div>
+    <% } else if (kind === 'register' || kind === 'register-customer' || kind === 'register-vendor') { %>
+        <div class="card mx-auto" style="max-width: 38rem"><div class="card-body">
+            <div class="btn-group w-100 mb-3" role="group">
+                <a class="btn btn-outline-success" href="/register/customer">Customer</a>
+                <a class="btn btn-outline-success" href="/register/vendor">Vendor</a>
+            </div>
+            <form method="post" action="<%= kind === 'register-vendor' ? '/register/vendor' : '/register/customer' %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <label class="form-label" for="name">Full name</label>
+                <input class="form-control mb-3" id="name" name="name" value="<%= typeof name === 'string' ? name : '' %>" required>
+                <% if (kind === 'register-vendor') { %>
+                    <label class="form-label" for="company_name">Business name</label>
+                    <input class="form-control mb-3" id="company_name" name="company_name" value="<%= typeof company_name === 'string' ? company_name : '' %>" required>
+                <% } %>
+                <label class="form-label" for="email">Email address</label>
+                <input class="form-control mb-3" type="email" id="email" name="email" value="<%= typeof email === 'string' ? email : '' %>" required>
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control mb-3" type="password" id="password" name="password" minlength="8" required>
+                <label class="form-label" for="password_confirmation">Confirm password</label>
+                <input class="form-control mb-3" type="password" id="password_confirmation" name="password_confirmation" minlength="8" required>
+                <button class="btn btn-success w-100" type="submit">Create account</button>
+            </form>
+        </div></div>
+    <% } else if (kind === 'verify-email') { %>
+        <div class="card mx-auto" style="max-width: 38rem"><div class="card-body text-center">
+            <p>Your account is set up. Verify your email address to activate it.</p>
+            <p class="fw-bold"><%= user.email %></p>
+            <form method="post" action="/email/verification-notification">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="btn btn-success" type="submit">Resend verification email</button>
+            </form>
+        </div></div>
+    <% } else if (kind === 'expired-link') { %>
+        <p>Return to <a href="/login">sign in</a> and request a new link.</p>
+    <% } else if (kind === 'food-list' || kind === 'vendor-foods') { %>
+        <% if (kind === 'food-list') { %>
+            <form method="get" class="row g-2 mb-4">
+                <div class="col"><input class="form-control" name="search" placeholder="Search food" value="<%= typeof search === 'string' ? search : '' %>"></div>
+                <div class="col-auto"><button class="btn btn-outline-success">Search</button></div>
+            </form>
+        <% } else { %>
+            <a class="btn btn-success mb-3" href="/vendor/foods/create">Add food</a>
+        <% } %>
+        <div class="row g-3">
+            <% for (const food of (foods || [])) { %>
+                <div class="col-md-4"><div class="card h-100">
+                    <% if (food.image) { %><img class="card-img-top" src="/images/foods/<%= encodeURIComponent(food.image) %>" alt="<%= food.name %>"><% } %>
+                    <div class="card-body">
+                        <h2 class="h5"><%= food.name %></h2>
+                        <p><%= food.category || 'Others' %><% if (food.company_name) { %> · <%= food.company_name %><% } %></p>
+                        <p class="fw-bold"><%= Number(food.price).toFixed(2) %></p>
+                        <% if (kind === 'vendor-foods') { %>
+                            <form method="post" action="/vendor/foods/delete/<%= food.id %>">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button class="btn btn-outline-danger btn-sm">Delete</button>
+                            </form>
+                        <% } else if (user?.role === 'customer') { %>
+                            <form method="post" action="/cart/add/<%= food.id %>">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input class="form-control mb-2" type="number" name="quantity" min="1" value="1">
+                                <button class="btn btn-success">Add to cart</button>
+                            </form>
+                        <% } %>
+                    </div>
+                </div></div>
+            <% } %>
+        </div>
+        <% if (!(foods || []).length) { %><p>No food items found.</p><% } %>
+    <% } else if (kind === 'cart') { %>
+        <% if (!(carts || []).length) { %><p>Your cart is empty. <a href="/customer/foods">Browse food</a>.</p><% } %>
+        <% for (const item of (carts || [])) { %>
+            <div class="border rounded p-3 mb-2 d-flex justify-content-between">
+                <span><%= item.name %> · <%= Number(item.price).toFixed(2) %> × <%= item.quantity %></span>
+                <form method="post" action="/cart/remove/<%= item.id %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-sm btn-outline-danger">Remove</button>
+                </form>
+            </div>
+        <% } %>
+        <% if ((carts || []).length) { %><a class="btn btn-success mt-3" href="/checkout">Checkout</a><% } %>
+    <% } else if (kind === 'checkout') { %>
+        <form method="post" action="/checkout" class="card card-body">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <h2 class="h5">Order summary</h2>
+            <% for (const item of (carts || [])) { %><p><%= item.name %> × <%= item.quantity %> · <%= (item.price * item.quantity).toFixed(2) %></p><% } %>
+            <label class="form-label" for="delivery_address">Delivery address</label>
+            <input class="form-control mb-3" name="delivery_address" id="delivery_address" required>
+            <label class="form-label" for="phone">Phone</label>
+            <input class="form-control mb-3" name="phone" id="phone" required>
+            <button class="btn btn-success">Place order and pay</button>
+        </form>
+    <% } else if (kind === 'orders') { %>
+        <% if (!(orders || []).length) { %><p>No orders to display.</p><% } %>
+        <div class="table-responsive"><table class="table table-striped"><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Payment</th><th>Total</th><th></th></tr></thead><tbody>
+        <% for (const order of (orders || [])) { %><tr>
+            <td><%= order.order_number %></td><td><%= order.created_at %></td><td><%= order.status %></td>
+            <td><%= order.payment_status %></td><td><%= Number(order.total_amount).toFixed(2) %></td>
+            <td><a href="/customer/orders/<%= order.id %>">Details</a></td>
+        </tr><% } %>
+        </tbody></table></div>
+    <% } else if (kind === 'order-detail') { %>
+        <p><%= order.order_number %> · <%= order.status %> · <%= order.payment_status %></p>
+        <% for (const item of (order.items || [])) { %><p><%= item.name %> × <%= item.quantity %> · <%= Number(item.price).toFixed(2) %></p><% } %>
+    <% } else if (kind === 'dashboard') { %>
+        <div class="row g-3 mb-4">
+            <% for (const [label, value] of Object.entries(stats || {})) { if (!Array.isArray(value)) { %>
+                <div class="col-sm-6 col-lg-3"><div class="card card-body"><span><%= label %></span><strong class="h3"><%= typeof value === 'number' ? value.toLocaleString() : value %></strong></div></div>
+            <% } } %>
+        </div>
+        <% if (stats?.recentOrders) { %><a href="/vendor/orders">View orders</a><% } %>
+    <% } else if (kind === 'users') { %>
+        <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th></tr></thead><tbody>
+        <% for (const item of users) { %><tr><td><%= item.name %></td><td><%= item.email %></td><td><%= item.role %></td><td><%= item.email_verified_at ? 'Yes' : 'No' %></td></tr><% } %>
+        </tbody></table></div>
+    <% } else if (kind === 'food-form') { %>
+        <form method="post" action="/vendor/foods/store" class="card card-body">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="form-label">Name</label><input class="form-control mb-3" name="name" required>
+            <label class="form-label">Category</label><input class="form-control mb-3" name="category" value="Others">
+            <label class="form-label">Price</label><input class="form-control mb-3" name="price" type="number" step="0.01" min="0" required>
+            <label class="form-label">Quantity</label><input class="form-control mb-3" name="quantity" type="number" min="0" required>
+            <label class="form-label">Expiry date</label><input class="form-control mb-3" name="expiry_date" type="date">
+            <button class="btn btn-success">Save food</button>
+        </form>
+    <% } else if (kind === 'profile') { %>
+        <form method="post" action="/profile" class="card card-body" style="max-width: 38rem">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="form-label">Name</label><input class="form-control mb-3" name="name" value="<%= user.name %>" required>
+            <label class="form-label">Email</label><input class="form-control mb-3" type="email" name="email" value="<%= user.email %>" required>
+            <button class="btn btn-success">Save profile</button>
+        </form>
+    <% } else if (kind === 'forgot-password' || kind === 'reset-password') { %>
+        <p>Accounts use passwordless email sign-in. <a href="/login">Request a sign-in link</a>.</p>
+    <% } else if (publicPage) { %>
+        <p>Browse fresh meals from local vendors.</p>
+        <a href="/register" class="btn btn-success">Create an account</a>
+        <div class="row g-3 mt-3">
+            <% for (const food of (foods || [])) { %><div class="col-md-3"><div class="card card-body"><h2 class="h5"><%= food.name %></h2><p><%= food.company_name || '' %></p><strong><%= Number(food.price).toFixed(2) %></strong></div></div><% } %>
+        </div>
+    <% } %>
+</main>
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
