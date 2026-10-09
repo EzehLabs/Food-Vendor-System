@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 @import './bootstrap.min.css';
 @import './font-awesome.min.css';
 @import './custom.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
