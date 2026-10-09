@@ -9,7 +9,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: "false"
       - key: APP_KEY
         generateValue: true
       - key: APP_URL
@@ -39,8 +39,8 @@ services:
           name: food-vending-db
           property: password
 
-  - type: pserv
-    name: food-vending-db
+databases:
+  - name: food-vending-db
     plan: free
     databaseName: food_vending
     user: food_vending
