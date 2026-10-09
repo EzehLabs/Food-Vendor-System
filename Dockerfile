@@ -37,4 +37,4 @@ RUN composer dump-autoload --no-dev --optimize \
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+CMD ["sh", "-c", "if [ -n \"$APP_KEY\" ] && [ \"${APP_KEY#base64:}\" = \"$APP_KEY\" ]; then export APP_KEY=\"base64:$APP_KEY\"; fi; php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
